@@ -1,0 +1,101 @@
+ /* Custom Styles */
+
+    body {
+      background-color: #f2f2f2;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      max-width: 500px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    h2 {
+      margin-top: 30px;
+      margin-bottom: 15px;
+      text-align: center;
+    }
+
+    .progress-bar {
+      background-color: #f0f0f0;
+      height: 10px;
+      margin-bottom: 20px;
+    }
+
+    .progress {
+      background-color: #2196f3;
+      height: 100%;
+      width: 0;
+      transition: width 0.3s;
+    }
+
+    fieldset {
+      display: none;
+      border: none;
+    }
+
+    fieldset.active {
+      display: block;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    textarea {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+      transition: border-color 0.3s;
+    }
+
+    input[type="text"]:focus,
+    input[type="email"]:focus,
+    input[type="tel"]:focus,
+    textarea:focus {
+      border-color: #2196f3;
+    }
+
+    .error {
+      border-color: #ff0000 !important;
+    }
+
+    button {
+      display: inline-block;
+      padding: 0px 20px;
+      background-color: #2196f3;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button.previous {
+      background-color: #ccc;
+    }
+
+    button:hover {
+      background-color: #0c7cd5;
+    }
+
+    .popup {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 40px;
+      background-color: #fff;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .popup img {
+      margin-bottom: 20px;
+    }
+
+    .popup button {
+      margin-top: 20px;
+    }
