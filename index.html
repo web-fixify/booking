@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Multi-Step Form</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/milligram@1.4.1/dist/milligram.min.css">
+  <link rel="stylesheet" href="./style.css">
+  <style>
+   
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="progress-bar">
+      <div class="progress"></div>
+    </div>
+    
+    <form id="myForm" action="#" method="POST">
+      <fieldset class="active">
+        <h2>Step 1</h2>
+        <input type="text" name="firstName" placeholder="First Name" required>
+        <input type="text" name="lastName" placeholder="Last Name" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="tel" name="phoneNumber" placeholder="Phone Number" required>
+        <input type="tel" name="secondPhoneNumber" placeholder="Second Phone Number">
+        <button class="next">Next</button>
+      </fieldset>
+      
+      <fieldset>
+        <h2>Step 2</h2>
+        <input type="text" name="service" placeholder="Service" required>
+        <input type="text" name="company" placeholder="Company" required>
+        <input type="text" name="model" placeholder="Model" required>
+        <textarea name="problem" placeholder="Explain Your Problem" required></textarea>
+        <button class="previous">Previous</button>
+        <button class="next">Next</button>
+      </fieldset>
+      
+      <fieldset>
+        <h2>Step 3</h2>
+        <input type="url" name="imageUrl" placeholder="Image URL" required>
+        <input type="url" name="backImageUrl" placeholder="Back Image URL" required>
+        <button class="previous">Previous</button>
+        <button type="submit">Submit</button>
+      </fieldset>
+    </form>
+
+    <div class="popup" id="popup">
+      <img src="path/to/your/gif.gif" alt="GIF">
+      <button id="doneButton">Done</button>
+    </div>
+  </div>
+  
+    <script src="https://cdn.jsdelivr.net/npm/smtpjs@3.3.2/dist/smtp.js"></script>
+  <script src="https://smtpjs.com/v3/smtp.js"></script>
+  <script>
+    const form = document.getElementById('myForm');
+    const fieldsets = form.querySelectorAll('fieldset');
+    const progressBar = document.querySelector('.progress');
+    const popup = document.getElementById('popup');
+    const doneButton = document.getElementById('doneButton');
+
+    let currentFieldset = 0;
+    updateProgress();
+
+    function updateProgress() {
+      const percent = ((currentFieldset + 1) / fieldsets.length) * 100;
+      progressBar.style.width = percent + '%';
+    }
+
+    function showFieldset(index) {
+      fieldsets.forEach((fieldset, i) => {
+        fieldset.classList.toggle('active', i === index);
+      });
+    }
+
+    function nextFieldset() {
+      if (validateFields(currentFieldset)) {
+        if (currentFieldset < fieldsets.length - 1) {
+          currentFieldset++;
+          showFieldset(currentFieldset);
+          updateProgress();
+        }
+      }
+    }
+
+    function previousFieldset() {
+      if (currentFieldset > 0) {
+        currentFieldset--;
+        showFieldset(currentFieldset);
+        updateProgress();
+      }
+    }
+
+    function validateFields(index) {
+      const currentInputs = fieldsets[index].querySelectorAll(
+        'input[required], textarea[required], select[required]'
+      );
+
+      let isValid = true;
+
+      currentInputs.forEach((input) => {
+        if (input.value.trim() === '') {
+          isValid = false;
+          input.classList.add('error');
+        } else {
+          input.classList.remove('error');
+        }
+      });
+
+      return isValid;
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      if (validateFields(currentFieldset)) {
+        // Collect form data
+        const formData = new FormData(form);
+
+        // Prepare email message
+        const message = `
+          First Name: ${formData.get('firstName')}
+          Last Name: ${formData.get('lastName')}
+          Email: ${formData.get('email')}
+          Phone Number: ${formData.get('phoneNumber')}
+          Second Phone Number: ${formData.get('secondPhoneNumber')}
+
+          Service: ${formData.get('service')}
+          Company: ${formData.get('company')}
+          Model: ${formData.get('model')}
+          Problem: ${formData.get('problem')}
+
+          Image URL: ${formData.get('imageUrl')}
+          Back Image URL: ${formData.get('backImageUrl')}
+        `;
+
+        // Configure SMTPJS with secure token
+        Email.send({
+          SecureToken: 'babe4a77-804b-4c8f-89e2-263b27a6b624',
+          To: 'fixify.contact@gmail.com',
+          From: 'fixify.contact@gmail.com',
+          Subject: 'Form Submission',
+          Body: message
+        }).then(() => {
+          // Show popup and hide form
+          form.reset();
+          form.style.display = 'none';
+          popup.style.display = 'flex';
+        }).catch((error) => {
+          // Show error message
+          console.error('Error:', error);
+          alert('An error occurred while submitting the form.');
+        });
+      }
+    });
+
+    doneButton.addEventListener('click', function () {
+      location.reload();
+    });
+
+    const nextButtons = document.querySelectorAll('button.next');
+    const previousButtons = document.querySelectorAll('button.previous');
+
+    nextButtons.forEach((button) => {
+      button.addEventListener('click', nextFieldset);
+    });
+
+    previousButtons.forEach((button) => {
+      button.addEventListener('click', previousFieldset);
+    });
+  </script>
+</body>
+  </html>
+    
