@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Multi-Step Form</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fixify Repairing service booking</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/milligram@1.4.1/dist/milligram.min.css">
   <link rel="stylesheet" href="css/style.css">
 
@@ -15,7 +16,7 @@
     
     <form id="myForm" action="#" method="POST">
       <fieldset class="active">
-        <h2>Step 1</h2>
+        <h2>Information</h2>
         <input type="text" name="firstName" placeholder="First Name" required>
         <input type="text" name="lastName" placeholder="Last Name" required>
         <input type="email" name="email" placeholder="Email" required>
@@ -25,7 +26,7 @@
       </fieldset>
       
       <fieldset>
-        <h2>Step 2</h2>
+        <h2>Service</h2>
         <select name="service" id="serviceSelect" required>
           <option value="">Select Service</option>
           <option value="Mobile Repairing">Mobile Repairing</option>
@@ -49,7 +50,7 @@
       </fieldset>
       
       <fieldset>
-        <h2>Step 3</h2>
+        <h2>Images link</h2>
         <input type="url" name="imageUrl" placeholder="Image URL" required>
         <input type="url" name="backImageUrl" placeholder="Back Image URL" required>
         <button class="previous">Previous</button>
