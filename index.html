@@ -1,15 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Fixify Repairing service booking</title>
+  <title>Multi-Step Form</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/milligram@1.4.1/dist/milligram.min.css">
-  <link rel="stylesheet" href="css/style.css">
-  <style>
-   
-  </style>
+  <link rel="stylesheet" href="./style.css">
+
 </head>
 <body>
+	
   <div class="container">
     <div class="progress-bar">
       <div class="progress"></div>
@@ -17,7 +15,7 @@
     
     <form id="myForm" action="#" method="POST">
       <fieldset class="active">
-        <h2>Information</h2>
+        <h2>Step 1</h2>
         <input type="text" name="firstName" placeholder="First Name" required>
         <input type="text" name="lastName" placeholder="Last Name" required>
         <input type="email" name="email" placeholder="Email" required>
@@ -27,17 +25,31 @@
       </fieldset>
       
       <fieldset>
-        <h2>Service</h2>
-        <input type="text" name="service" placeholder="Service" required>
+        <h2>Step 2</h2>
+        <select name="service" id="serviceSelect" required>
+          <option value="">Select Service</option>
+          <option value="Mobile Repairing">Mobile Repairing</option>
+          <option value="TV Repairing">TV Repairing</option>
+          <option value="AC Repairing">AC Repairing</option>
+        </select>
         <input type="text" name="company" placeholder="Company" required>
         <input type="text" name="model" placeholder="Model" required>
-        <textarea name="problem" placeholder="Explain Your Problem" required></textarea>
+        <textarea name="problemDescription" placeholder="Explain Your Problem" required></textarea>
+        <div id="additionalOptions" style="display: none;">
+          <h3>Additional Options:</h3>
+          <label><input type="checkbox" name="problem" value="Display Broken">Display Broken</label>
+          <label><input type="checkbox" name="problem" value="Battery Problem">Battery Problem</label>
+          <label><input type="checkbox" name="problem" value="Front Camera Problem">Front Camera Problem</label>
+          <label><input type="checkbox" name="problem" value="Backup Camera Problem">Backup Camera Problem</label>
+          <label><input type="checkbox" name="problem" value="Charging Pin Problem">Charging Pin Problem</label>
+          <label><input type="checkbox" name="problem" value="Other">Other</label>
+        </div>
         <button class="previous">Previous</button>
         <button class="next">Next</button>
       </fieldset>
       
       <fieldset>
-        <h2>images</h2>
+        <h2>Step 3</h2>
         <input type="url" name="imageUrl" placeholder="Image URL" required>
         <input type="url" name="backImageUrl" placeholder="Back Image URL" required>
         <button class="previous">Previous</button>
@@ -59,6 +71,8 @@
     const progressBar = document.querySelector('.progress');
     const popup = document.getElementById('popup');
     const doneButton = document.getElementById('doneButton');
+    const serviceSelect = document.getElementById('serviceSelect');
+    const additionalOptions = document.getElementById('additionalOptions');
 
     let currentFieldset = 0;
     updateProgress();
@@ -119,20 +133,31 @@
         const formData = new FormData(form);
 
         // Prepare email message
-        const message = `
-          First Name: ${formData.get('firstName')}
-          Last Name: ${formData.get('lastName')}
-          Email: ${formData.get('email')}
-          Phone Number: ${formData.get('phoneNumber')}
-          Second Phone Number: ${formData.get('secondPhoneNumber')}
+        let message = `First Name: ${formData.get('firstName')}
+        Last Name: ${formData.get('lastName')}
+        Email: ${formData.get('email')}
+        Phone Number: ${formData.get('phoneNumber')}
+        Second Phone Number: ${formData.get('secondPhoneNumber')}
 
-          Service: ${formData.get('service')}
-          Company: ${formData.get('company')}
-          Model: ${formData.get('model')}
-          Problem: ${formData.get('problem')}
+        Service: ${formData.get('service')}
+        Company: ${formData.get('company')}
+        Model: ${formData.get('model')}
+        Problem: ${formData.get('problemDescription')}
+        `;
 
-          Image URL: ${formData.get('imageUrl')}
-          Back Image URL: ${formData.get('backImageUrl')}
+        if (formData.get('service') === 'Mobile Repairing') {
+          const selectedOptions = form.querySelectorAll('input[name="problem"]:checked');
+          if (selectedOptions.length > 0) {
+            message += '\nAdditional Options:\n';
+            selectedOptions.forEach((option) => {
+              message += `- ${option.value}\n`;
+            });
+          }
+        }
+
+        message += `
+        Image URL: ${formData.get('imageUrl')}
+        Back Image URL: ${formData.get('backImageUrl')}
         `;
 
         // Configure SMTPJS with secure token
@@ -169,7 +194,14 @@
     previousButtons.forEach((button) => {
       button.addEventListener('click', previousFieldset);
     });
+
+    serviceSelect.addEventListener('change', function () {
+      if (serviceSelect.value === 'Mobile Repairing') {
+        additionalOptions.style.display = 'block';
+      } else {
+        additionalOptions.style.display = 'none';
+      }
+    });
   </script>
 </body>
-  </html>
-    
+</html>
