@@ -1,12 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Fixify Repairing service booking</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/milligram@1.4.1/dist/milligram.min.css">
   <link rel="stylesheet" href="css/style.css">
+
 </head>
 <body>
+	
   <div class="container">
     <div class="progress-bar">
       <div class="progress"></div>
@@ -49,13 +51,10 @@
       
       <fieldset>
         <h2>Images link</h2>
-        <input type="file" id="frontImageUpload" required>
-        <input type="file" id="backImageUpload" required>
+        <input type="url" name="imageUrl" placeholder="Image URL" required>
+        <input type="url" name="backImageUrl" placeholder="Back Image URL" required>
         <button class="previous">Previous</button>
-        <button type="button" onclick="uploadImages()">Upload Images</button>
-        <img id="frontImagePreview" src="#" alt="Front Image" style="display: none; max-width: 200px; max-height: 200px;">
-        <img id="backImagePreview" src="#" alt="Back Image" style="display: none; max-width: 200px; max-height: 200px;">
-        <span id="uploadStatus" style="display: none;">✔ Images Uploaded</span>
+        <button type="submit">Submit</button>
       </fieldset>
     </form>
 
@@ -65,8 +64,8 @@
     </div>
   </div>
   
-  <script src="https://cdn.jsdelivr.net/npm/jquery/dist/jquery.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/smtpjs@3.3.2/dist/smtp.js"></script>
+  <script src="https://smtpjs.com/v3/smtp.js"></script>
   <script>
     const form = document.getElementById('myForm');
     const fieldsets = form.querySelectorAll('fieldset');
@@ -75,11 +74,6 @@
     const doneButton = document.getElementById('doneButton');
     const serviceSelect = document.getElementById('serviceSelect');
     const additionalOptions = document.getElementById('additionalOptions');
-    const frontImageUpload = document.getElementById('frontImageUpload');
-    const backImageUpload = document.getElementById('backImageUpload');
-    const frontImagePreview = document.getElementById('frontImagePreview');
-    const backImagePreview = document.getElementById('backImagePreview');
-    const uploadStatus = document.getElementById('uploadStatus');
 
     let currentFieldset = 0;
     updateProgress();
@@ -132,8 +126,15 @@
       return isValid;
     }
 
-    function prepareEmailMessage(formData) {
-      let message = `First Name: ${formData.get('firstName')}
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+
+      if (validateFields(currentFieldset)) {
+        // Collect form data
+        const formData = new FormData(form);
+
+        // Prepare email message
+        let message = `First Name: ${formData.get('firstName')}
         Last Name: ${formData.get('lastName')}
         Email: ${formData.get('email')}
         Phone Number: ${formData.get('phoneNumber')}
@@ -143,105 +144,42 @@
         Company: ${formData.get('company')}
         Model: ${formData.get('model')}
         Problem: ${formData.get('problemDescription')}
+        `;
 
+        if (formData.get('service') === 'Mobile Repairing') {
+          const selectedOptions = form.querySelectorAll('input[name="problem"]:checked');
+          if (selectedOptions.length > 0) {
+            message += '\nAdditional Options:\n';
+            selectedOptions.forEach((option) => {
+              message += `- ${option.value}\n`;
+            });
+          }
+        }
+
+        message += `
         Image URL: ${formData.get('imageUrl')}
         Back Image URL: ${formData.get('backImageUrl')}
-      `;
+        `;
 
-      return message;
-    }
-
-    function uploadImages() {
-      const formData = new FormData(form);
-
-      // Check if front image is selected
-      if (frontImageUpload.files.length === 0) {
-        alert('Please select a front image.');
-        return;
-      }
-
-      // Check if back image is selected
-      if (backImageUpload.files.length === 0) {
-        alert('Please select a back image.');
-        return;
-      }
-
-      // Disable upload button
-      const uploadButton = document.querySelector('button[type="button"]');
-      uploadButton.disabled = true;
-
-      // Show image upload status
-      uploadStatus.style.display = 'inline';
-
-      // Prepare front image data
-      const frontImage = frontImageUpload.files[0];
-      const frontImageData = new FormData();
-      frontImageData.append('image', frontImage);
-
-      // Upload front image
-      axios.post('https://api.imgur.com/3/upload', frontImageData, {
-        headers: {
-          Authorization: 'Client-ID YOUR_IMGUR_CLIENT_ID'
-        }
-      }).then((response) => {
-        const frontImageUrl = response.data.data.link;
-        formData.set('imageUrl', frontImageUrl);
-        frontImagePreview.src = frontImageUrl;
-        frontImagePreview.style.display = 'block';
-
-        // Prepare back image data
-        const backImage = backImageUpload.files[0];
-        const backImageData = new FormData();
-        backImageData.append('image', backImage);
-
-        // Upload back image
-        axios.post('https://api.imgur.com/3/upload', backImageData, {
-          headers: {
-            Authorization: 'Client-ID 2455cb9ff4bc073'
-          }
-        }).then((response) => {
-          const backImageUrl = response.data.data.link;
-          formData.set('backImageUrl', backImageUrl);
-          backImagePreview.src = backImageUrl;
-          backImagePreview.style.display = 'block';
-          uploadStatus.textContent = '✔ Images Uploaded';
-
-          // Prepare and send email
-          const message = prepareEmailMessage(formData);
-          sendEmail(message);
+        // Configure SMTPJS with secure token
+        Email.send({
+          SecureToken: 'babe4a77-804b-4c8f-89e2-263b27a6b624',
+          To: 'fixify.contact@gmail.com',
+          From: 'fixify.contact@gmail.com',
+          Subject: 'Form Submission',
+          Body: message
+        }).then(() => {
+          // Show popup and hide form
+          form.reset();
+          form.style.display = 'none';
+          popup.style.display = 'flex';
         }).catch((error) => {
-          console.error('Error uploading back image:', error);
-          alert('An error occurred while uploading the back image.');
-          uploadButton.disabled = false;
-          uploadStatus.style.display = 'none';
+          // Show error message
+          console.error('Error:', error);
+          alert('An error occurred while submitting the form.');
         });
-      }).catch((error) => {
-        console.error('Error uploading front image:', error);
-        alert('An error occurred while uploading the front image.');
-        uploadButton.disabled = false;
-        uploadStatus.style.display = 'none';
-      });
-    }
-
-    function sendEmail(message) {
-      // Configure SMTPJS with secure token
-      Email.send({
-        SecureToken: 'babe4a77-804b-4c8f-89e2-263b27a6b624',
-        To: 'fixify.contact@gmail.com',
-        From: 'fixify.contact@gmail.com',
-        Subject: 'Form Submission',
-        Body: message
-      }).then(() => {
-        // Show popup and hide form
-        form.reset();
-        form.style.display = 'none';
-        popup.style.display = 'flex';
-      }).catch((error) => {
-        // Show error message
-        console.error('Error sending email:', error);
-        alert('An error occurred while submitting the form.');
-      });
-    }
+      }
+    });
 
     doneButton.addEventListener('click', function () {
       location.reload();
