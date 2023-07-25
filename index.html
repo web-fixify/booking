@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Fixify Repairing service booking</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/milligram@1.4.1/dist/milligram.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <div class="container">
+    <div class="progress-bar">
+      <div class="progress"></div>
+    </div>
+
+    <!-- Add a hidden input field to store the unique form ID -->
+    <input type="hidden" id="formIdInput" name="formId">
+
+    <form id="myForm" action="#" method="POST" enctype="multipart/form-data">
+      <!-- Rest of the form fields as before -->
+       <fieldset class="active">
+        <h2>Information</h2>
+        <input type="text" name="fullName" placeholder="Full Name" required>
+        <input type="text" name="lastName" placeholder="Last Name" required>
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="tel" name="phoneNumber" placeholder="Phone Number" required>
+        <input type="tel" name="secondPhoneNumber" placeholder="Alternate Phone Number">
+        <button class="next">Next</button>
+      </fieldset>
+      
+      <fieldset>
+        <h2>Address</h2>
+        <input type="text" name="villageName" placeholder="Village Name" required>
+        <input type="text" name="pincode" placeholder="Pincode" required>
+        <input type="text" name="state" placeholder="State" readonly>
+        <input type="text" name="city" placeholder="City" readonly>
+        <input type="text" name="landmark" placeholder="Landmark" required>
+        <button class="previous">Previous</button>
+        <button class="next">Next</button>
+      </fieldset>
+      
+      <fieldset>
+        <h2>Service</h2>
+        <select name="service" id="serviceSelect" required>
+          <option value="">Select Service</option>
+          <option value="Mobile Repairing">Mobile Repairing</option>
+          <option value="TV Repairing">TV Repairing</option>
+          <option value="AC Repairing">AC Repairing</option>
+        </select>
+        <input type="text" name="company" placeholder="Company" required>
+        <input type="text" name="model" placeholder="Model" required>
+        <textarea name="problemDescription" placeholder="Explain Your Problem" required></textarea>
+        <div id="additionalOptions" style="display: none;">
+          <h3>Additional Options:</h3>
+          <label><input type="checkbox" name="problem" value="Display Broken">Display Broken</label>
+          <label><input type="checkbox" name="problem" value="Battery Problem">Battery Problem</label>
+          <label><input type="checkbox" name="problem" value="Front Camera Problem">Front Camera Problem</label>
+          <label><input type="checkbox" name="problem" value="Backup Camera Problem">Backup Camera Problem</label>
+          <label><input type="checkbox" name="problem" value="Charging Pin Problem">Charging Pin Problem</label>
+          <label><input type="checkbox" name="problem" value="Other">Other</label>
+        </div>
+        <button class="previous">Previous</button>
+        <button class="next">Next</button>
+      </fieldset>
+      
+      <fieldset>
+        <h2>Images Upload</h2>
+        <input type="file" name="frontPhoto" accept="image/*" required>
+        <input type="file" name="backPhoto" accept="image/*" required>
+        <button class="previous">Previous</button>
+        <button type="button" id="uploadButton">Upload</button>
+        <button type="submit" style="display: none;" id="submitButton">Submit</button>
+      </fieldset>
+      <!-- ... -->
+      
+    </form>
+
+    <img class="responsive-image" src="images/20230704_095710.png" alt="why choose us ">
+    <img class="responsive-image" src="images/20230704_093231.jpg" alt="Fixify service protection">
+
+    <div class="popup" id="popup">
+      <!-- Use a <span> element to display the unique form ID in the popup -->
+      <span id="formIdPopupText"></span>
+      <button id="doneButton">Done</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/smtpjs@3.3.2/dist/smtp.js"></script>
+  <script src="https://smtpjs.com/v3/smtp.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    // Function to get the next serial number with leading zeros
+    function getNextSerialNumber(counter) {
+      const serialNumber = counter.toString().padStart(9, '0');
+      return serialNumber;
+    }
+
+    // Generate and set the unique form ID
+    function generateAndSetFormId() {
+      let counter = parseInt(localStorage.getItem('formCounter') || '0');
+      counter++;
+      localStorage.setItem('formCounter', counter.toString());
+
+      const uniqueFormId = getNextSerialNumber(counter);
+      document.getElementById('formIdInput').value = uniqueFormId;
+      document.getElementById('formIdPopupText').textContent = `Form ID: ${uniqueFormId}`;
+      return uniqueFormId;
+    }
+
+    const form = document.getElementById('myForm');
+    const fieldsets = form.querySelectorAll('fieldset');
+    const progressBar = document.querySelector('.progress');
+    const popup = document.getElementById('popup');
+    const doneButton = document.getElementById('doneButton');
+    const serviceSelect = document.getElementById('serviceSelect');
+    const additionalOptions = document.getElementById('additionalOptions');
+
+    let currentFieldset = 0;
+    updateProgress();
+
+    function updateProgress() {
+      const percent = ((currentFieldset + 1) / fieldsets.length) * 100;
+      progressBar.style.width = percent + '%';
+    }
+
+    function showFieldset(index) {
+      fieldsets.forEach((fieldset, i) => {
+        fieldset.classList.toggle('active', i === index);
+      });
+    }
+
+    function nextFieldset() {
+      if (validateFields(currentFieldset)) {
+        if (currentFieldset < fieldsets.length - 1) {
+          currentFieldset++;
+          showFieldset(currentFieldset);
+          updateProgress();
+        }
+      }
+    }
+
+    function previousFieldset() {
+      if (currentFieldset > 0) {
+        currentFieldset--;
+        showFieldset(currentFieldset);
+        updateProgress();
+      }
+    }
+
+    function validateFields(index) {
+      const currentInputs = fieldsets[index].querySelectorAll(
+        'input[required], textarea[required], select[required]'
+      );
+
+      let isValid = true;
+
+      currentInputs.forEach((input) => {
+        if (input.value.trim() === '') {
+          isValid = false;
+          input.classList.add('error');
+        } else {
+          input.classList.remove('error');
+        }
+      });
+
+      return isValid;
+    }
+
+    // Helper function to upload an image to Imgur
+    async function uploadImage(imageFile) {
+      const clientId = '2455cb9ff4bc073'; // Replace with your Imgur API client ID
+      const apiUrl = 'https://api.imgur.com/3/image';
+      const formData = new FormData();
+      formData.append('image', imageFile);
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Client-ID ${clientId}`
+        },
+        body: formData
+      });
+
+      const data = await response.json();
+      return data.data.link;
+    }
+
+    // Function to handle the image upload and form submission
+    async function handleUploadAndSubmit() {
+      const frontPhotoInput = document.querySelector('input[name="frontPhoto"]');
+      const backPhotoInput = document.querySelector('input[name="backPhoto"]');
+
+      const frontPhoto = frontPhotoInput.files[0];
+      const backPhoto = backPhotoInput.files[0];
+
+      // Upload front photo
+      const frontPhotoUrl = await uploadImage(frontPhoto);
+
+      // Upload back photo
+      const backPhotoUrl = await uploadImage(backPhoto);
+
+      // Update the form data with the uploaded photo URLs
+      const formData = new FormData(form);
+      formData.set('frontPhotoUrl', frontPhotoUrl);
+      formData.set('backPhotoUrl', backPhotoUrl);
+
+      // Get the unique form ID
+      const uniqueFormId = generateAndSetFormId();
+
+      // Prepare email message
+      let message = `Form ID: ${uniqueFormId}\n`;
+      formData.forEach((value, key) => {
+        message += `${key}: ${value}\n`;
+      });
+
+      // Configure SMTPJS with secure token
+      Email.send({
+        SecureToken: 'babe4a77-804b-4c8f-89e2-263b27a6b624',
+        To: 'fixify.contact@gmail.com',
+        From: 'fixify.contact@gmail.com',
+        Subject: 'Form Submission',
+        Body: message
+      }).then(() => {
+        // Show popup and hide form
+        form.reset();
+        form.style.display = 'none';
+        popup.style.display = 'flex';
+      }).catch((error) => {
+        // Show error message
+        console.error('Error:', error);
+        alert('An error occurred while submitting the form.');
+      });
+    }
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      handleUploadAndSubmit();
+    });
+
+    doneButton.addEventListener('click', function () {
+      location.reload();
+    });
+
+    const nextButtons = document.querySelectorAll('button.next');
+    const previousButtons = document.querySelectorAll('button.previous');
+    const uploadButton = document.getElementById('uploadButton');
+    const submitButton = document.getElementById('submitButton');
+
+    nextButtons.forEach((button) => {
+      button.addEventListener('click', nextFieldset);
+    });
+
+    previousButtons.forEach((button) => {
+      button.addEventListener('click', previousFieldset);
+    });
+
+    uploadButton.addEventListener('click', function () {
+      handleUploadAndSubmit();
+    });
+
+    serviceSelect.addEventListener('change', function () {
+      if (serviceSelect.value === 'Mobile Repairing') {
+        additionalOptions.style.display = 'block';
+      } else {
+        additionalOptions.style.display = 'none';
+      }
+    });
+
+    // Add event listener to pincode input for automatic state and city finding
+    const pincodeInput = document.querySelector('input[name="pincode"]');
+    pincodeInput.addEventListener('change', async function () {
+      const pincode = this.value.trim();
+      if (pincode.length === 6 && /^\d+$/.test(pincode)) {
+        try {
+          const response = await fetch(`https://api.postalpincode.in/pincode/${pincode}`);
+          const data = await response.json();
+          const postOffice = data[0].PostOffice[0];
+          const stateInput = document.querySelector('input[name="state"]');
+          const cityInput = document.querySelector('input[name="city"]');
+          stateInput.value = postOffice.State;
+          cityInput.value = postOffice.Block;
+        } catch (error) {
+          console.error('Error:', error);
+        }
+      } else {
+        console.log('Invalid pincode');
+      }
+    });
+  </script>
+</body>
+</html>
