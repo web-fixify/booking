@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Find Form Submission</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+    }
+
+    h1 {
+      text-align: center;
+      padding: 20px 0;
+      color: #333;
+    }
+
+    #searchForm {
+      max-width: 600px;
+      margin: auto;
+      text-align: center;
+      margin-top: 20px;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
+
+    input[type="text"] {
+      padding: 8px;
+      width: 100%;
+      max-width: 400px;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      outline: none;
+    }
+
+    button {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background-color: #c82333;
+    }
+
+    #formDetails {
+      max-width: 800px;
+      margin: auto;
+      margin-top: 40px;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    #formDetails div {
+      margin-bottom: 10px;
+    }
+
+    strong {
+      display: inline-block;
+      width: 200px;
+      font-weight: bold;
+    }
+
+    .form-info-container {
+      display: flex;
+      flex-wrap: wrap;
+    }
+
+    .form-info-item {
+      flex: 1 1 300px;
+      padding: 8px;
+    }
+
+    .form-info-item strong {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Find Form Submission</h1>
+  <div id="searchForm">
+    <label for="formId">Form ID:</label>
+    <input type="text" id="formId" placeholder="Enter Form ID">
+    <label for="phoneNumber">Registered Phone Number:</label>
+    <input type="text" id="phoneNumber" placeholder="Enter Registered Phone Number">
+    <button onclick="searchForm()">Search</button>
+  </div>
+
+  <div id="formDetails">
+    <!-- The form details will be displayed here -->
+  </div>
+
+  <script>
+  // The JavaScript code remains the same as in the previous example
+    
+      // Function to search for a form entry by Form ID and Registered Phone Number
+    function searchForm() {
+      const formIdInput = document.getElementById('formId');
+      const phoneNumberInput = document.getElementById('phoneNumber');
+
+      const formId = formIdInput.value.trim();
+      const phoneNumber = phoneNumberInput.value.trim();
+
+      if (formId && phoneNumber) {
+        const formDetails = JSON.parse(localStorage.getItem('formDetails') || '[]');
+        const matchingForm = formDetails.find((formInfo) => formInfo.formId === formId && formInfo.formData.phoneNumber === phoneNumber);
+
+        if (matchingForm) {
+          displayFormDetails(matchingForm);
+        } else {
+          displayErrorMessage('Form not found. Please check the Form ID and Registered Phone Number.');
+        }
+      } else {
+        displayErrorMessage('Please enter both Form ID and Registered Phone Number.');
+      }
+    }
+
+    // Function to display form details if a match is found
+    function displayFormDetails(formInfo) {
+      const formDetailsDiv = document.getElementById('formDetails');
+      formDetailsDiv.innerHTML = '';
+
+      const formDetailsHTML = `
+        <div>
+          <strong>Form ID:</strong> ${formInfo.formId}
+        </div>
+        <div>
+          <strong>Submission Date:</strong> ${new Date(formInfo.date).toLocaleString()}
+        </div>
+        <div>
+          <strong>Full Name:</strong> ${formInfo.formData.fullName}
+        </div>
+        <div>
+          <strong>Last Name:</strong> ${formInfo.formData.lastName}
+        </div>
+        <div>
+          <strong>Email:</strong> ${formInfo.formData.email}
+        </div>
+        <div>
+          <strong>Phone Number:</strong> ${formInfo.formData.phoneNumber}
+        </div>
+        <div>
+          <strong>Alternate Phone Number:</strong> ${formInfo.formData.secondPhoneNumber || 'N/A'}
+        </div>
+        <div>
+          <strong>Village Name:</strong> ${formInfo.formData.villageName}
+        </div>
+        <div>
+          <strong>Pincode:</strong> ${formInfo.formData.pincode}
+        </div>
+        <div>
+          <strong>State:</strong> ${formInfo.formData.state}
+        </div>
+        <div>
+          <strong>City:</strong> ${formInfo.formData.city}
+        </div>
+        <div>
+          <strong>Landmark:</strong> ${formInfo.formData.landmark}
+        </div>
+        <div>
+          <strong>Service:</strong> ${formInfo.formData.service}
+        </div>
+        <div>
+          <strong>Company:</strong> ${formInfo.formData.company}
+        </div>
+        <div>
+          <strong>Model:</strong> ${formInfo.formData.model}
+        </div>
+        <div>
+          <strong>Problem Description:</strong> ${formInfo.formData.problemDescription}
+        </div>
+        <div>
+          <strong>Additional Options:</strong> ${formInfo.formData.problem || 'N/A'}
+        </div>
+        <div>
+          <strong>Front Photo URL:</strong> <a href="${formInfo.formData.frontPhotoUrl}" target="_blank">${formInfo.formData.frontPhotoUrl}</a>
+        </div>
+        <div>
+          <strong>Back Photo URL:</strong> <a href="${formInfo.formData.backPhotoUrl}" target="_blank">${formInfo.formData.backPhotoUrl}</a>
+        </div>
+      `;
+
+      formDetailsDiv.innerHTML = formDetailsHTML;
+    }
+
+    // Function to display error message if form is not found
+    function displayErrorMessage(message) {
+      const formDetailsDiv = document.getElementById('formDetails');
+      formDetailsDiv.innerHTML = `<div style="color: red;">${message}</div>`;
+    }
+  </script>
+</body>
+</html>
