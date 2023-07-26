@@ -85,24 +85,30 @@
   <script src="https://smtpjs.com/v3/smtp.js"></script>
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
   <script>
-    // Function to get the next serial number with leading zeros
-    function getNextSerialNumber(counter) {
-      const serialNumber = counter.toString().padStart(9, '0');
-      return serialNumber;
+  // Function to generate a random 9-digit number
+  function generateRandomFormId() {
+    const min = 100000000; // Smallest 9-digit number (100,000,000)
+    const max = 999999999; // Largest 9-digit number (999,999,999)
+    return Math.floor(Math.random() * (max - min + 1) + min);
+  }
+
+  // Function to check if the generated form ID is unique
+  function isFormIdUnique(formId) {
+    const formDetails = JSON.parse(localStorage.getItem('formDetails') || '[]');
+    return !formDetails.some((entry) => entry.formId === formId);
+  }
+
+  // Generate and set the unique form ID
+  function generateAndSetFormId() {
+    let formId = generateRandomFormId();
+    while (!isFormIdUnique(formId)) {
+      formId = generateRandomFormId();
     }
 
-    // Generate and set the unique form ID
-    function generateAndSetFormId() {
-      let counter = parseInt(localStorage.getItem('formCounter') || '0');
-      counter++;
-      localStorage.setItem('formCounter', counter.toString());
-
-      const uniqueFormId = getNextSerialNumber(counter);
-      document.getElementById('formIdInput').value = uniqueFormId;
-      document.getElementById('formIdPopupText').textContent = `Form ID: ${uniqueFormId}`;
-      return uniqueFormId;
-    }
-
+    document.getElementById('formIdInput').value = formId;
+    document.getElementById('formIdPopupText').textContent = `Form ID: ${formId}`;
+    return formId;
+  }
     const form = document.getElementById('myForm');
     const fieldsets = form.querySelectorAll('fieldset');
     const progressBar = document.querySelector('.progress');
