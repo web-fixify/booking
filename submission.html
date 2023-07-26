@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Form Submissions</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    h1 {
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    #formSubmissionList {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      max-width: 600px;
+      margin: auto;
+    }
+
+    li {
+      padding: 10px;
+      border-bottom: 1px solid #ccc;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    button {
+      background-color: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+
+    button:hover {
+      background-color: #c82333;
+    }
+
+    @media screen and (max-width: 600px) {
+      #formSubmissionList {
+        max-width: 90%;
+      }
+    }
+
+    /* Additional styles for the search bar */
+    #searchBar {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    #searchFormId {
+      padding: 8px;
+      margin-right: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    .pagination button {
+      margin: 0 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Form Submissions</h1>
+  <div id="searchBar">
+    <label for="searchFormId">Enter Form ID or Search Terms:</label>
+    <input type="text" id="searchFormId" placeholder="Form ID or Search Terms...">
+    <button onclick="searchForm()">Search</button>
+    <label for="startDate">Start Date:</label>
+    <input type="date" id="startDate">
+    <label for="endDate">End Date:</label>
+    <input type="date" id="endDate">
+    <button onclick="filterByDateRange()">Filter</button>
+  </div>
+  <ul id="formSubmissionList"></ul>
+
+  <div class="pagination">
+    <button onclick="prevPage()">Previous</button>
+    <button onclick="nextPage()">Next</button>
+  </div>
+
+  <script>
+    // Function to get form submissions from Local Storage and reverse the array to show new submissions first
+    function getFormSubmissionsFromLocalStorage() {
+      const formDetails = JSON.parse(localStorage.getItem('formDetails') || '[]').reverse();
+      return formDetails;
+    }
+
+    // Function to display form submissions on the submission.html page
+    function displayFormsByPage(page) {
+      const formSubmissionList = document.getElementById('formSubmissionList');
+      const formDetails = getFormSubmissionsFromLocalStorage();
+      const startIndex = (page - 1) * formsPerPage;
+      const endIndex = startIndex + formsPerPage;
+      const pageForms = formDetails.slice(startIndex, endIndex);
+
+      formSubmissionList.innerHTML = ''; // Clear the list before re-rendering
+
+      pageForms.forEach((formInfo, index) => {
+        const listItem = document.createElement('li');
+        listItem.innerHTML = `
+          <div>
+            <strong>Form ${startIndex + index + 1}</strong> - Form ID: ${formInfo.formId}<br>
+            <strong>Submission Date:</strong> ${new Date(formInfo.date).toLocaleString()}<br>
+            <pre>${JSON.stringify(formInfo.formData, null, 2)}</pre>
+          </div>
+          <button onclick="confirmDelete(${startIndex + index})">Delete</button>
+        `;
+
+        formSubmissionList.appendChild(listItem);
+      });
+    }
+
+    // Function to prompt for confirmation before deleting a form entry
+    function confirmDelete(index) {
+      const formDetails = getFormSubmissionsFromLocalStorage();
+      const formId = formDetails[index].formId;
+      const confirmation = confirm(`Are you sure you want to delete Form ID: ${formId}?`);
+      if (confirmation) {
+        deleteFormEntry(index);
+      }
+    }
+
+    // Function to delete a form entry from Local Storage
+    function deleteFormEntry(index) {
+      const formDetails = getFormSubmissionsFromLocalStorage();
+      formDetails.splice(index, 1);
+      localStorage.setItem('formDetails', JSON.stringify(formDetails.reverse())); // Store and reverse the array again
+      displayFormsByPage(currentPage); // Refresh the list after deletion
+    }
+
+    // Function to search for a form entry by Form ID or Search Terms
+    function searchForm() {
+      const searchTerm = document.getElementById('searchFormId').value.trim().toLowerCase();
+      const formDetails = getFormSubmissionsFromLocalStorage();
+
+      // Filter form submissions based on search term
+      const filteredForms = formDetails.filter((formInfo) => {
+        const formId = formInfo.formId.toLowerCase();
+        const formDataString = JSON.stringify(formInfo.formData).toLowerCase();
+        return formId.includes(searchTerm) || formDataString.includes(searchTerm);
+      });
+
+      if (filteredForms.length > 0) {
+        // Display the form details if any matches found
+        const formSubmissionList = document.getElementById('formSubmissionList');
+        formSubmissionList.innerHTML = '';
+
+        filteredForms.forEach((foundForm, index) => {
+          const listItem = document.createElement('li');
+          listItem.innerHTML = `
+            <div>
+              <strong>Form ${index + 1} - Form ID: ${foundForm.formId}</strong><br>
+              <strong>Submission Date:</strong> ${new Date(foundForm.date).toLocaleString()}<br>
+              <pre>${JSON.stringify(foundForm.formData, null, 2)}</pre>
+            </div>
+            <button onclick="confirmDelete(${index})">Delete</button>
+          `;
+          formSubmissionList.appendChild(listItem);
+        });
+      } else {
+        // Display a message if no matches found
+        alert('No matching form submissions found!');
+        displayFormsByPage(currentPage);
+      }
+    }
+
+    // Function to filter form submissions by a specific date range
+    function filterByDateRange() {
+      const startDateInput = document.getElementById('startDate');
+      const endDateInput = document.getElementById('endDate');
+
+      const startDateString = startDateInput.value;
+      const endDateString = endDateInput.value;
+
+      if (startDateString && endDateString) {
+        const formSubmissionList = document.getElementById('formSubmissionList');
+        formSubmissionList.innerHTML = ''; // Clear the list before re-rendering
+
+        const formDetails = getFormSubmissionsFromLocalStorage();
+        const filteredForms = formDetails.filter((formInfo) => {
+          const submissionDate = new Date(formInfo.date).setHours(0, 0, 0, 0); // Convert to midnight timestamp
+          const startDate = new Date(startDateString).setHours(0, 0, 0, 0);
+          const endDate = new Date(endDateString).setHours(0, 0, 0, 0);
+          return submissionDate >= startDate && submissionDate <= endDate;
+        });
+
+        if (filteredForms.length > 0) {
+          filteredForms.forEach((formInfo, index) => {
+            const listItem = document.createElement('li');
+            listItem.innerHTML = `
+              <div>
+                <strong>Form ${index + 1} - Form ID: ${formInfo.formId}</strong><br>
+                <strong>Submission Date:</strong> ${new Date(formInfo.date).toLocaleString()}<br>
+                <pre>${JSON.stringify(formInfo.formData, null, 2)}</pre>
+              </div>
+              <button onclick="confirmDelete(${index})">Delete</button>
+            `;
+            formSubmissionList.appendChild(listItem);
+          });
+        } else {
+          alert('No form submissions found within the selected date range.');
+          displayFormsByPage(currentPage);
+        }
+      } else {
+        alert('Please select both start and end dates.');
+      }
+    }
+
+    // Pagination
+    const formsPerPage = 5;
+    let currentPage = 1;
+
+    function prevPage() {
+      if (currentPage > 1) {
+        currentPage--;
+        displayFormsByPage(currentPage);
+      }
+    }
+
+    function nextPage() {
+      const formDetails = getFormSubmissionsFromLocalStorage();
+      const totalPages = Math.ceil(formDetails.length / formsPerPage);
+      if (currentPage < totalPages) {
+        currentPage++;
+        displayFormsByPage(currentPage);
+      }
+    }
+
+    // Retrieve and display form submissions when the page loads
+    displayFormsByPage(currentPage);
+  </script>
+</body>
+</html>
